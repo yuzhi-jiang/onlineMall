@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.0/dist/css/bootstrap.min.css"
+          integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <title>上架商品</title>
+</head>
+<body>
+<!-- 导航条 -->
+<nav class="navbar navbar-dark bg-dark sticky-top py-1">
+    <a class="navbar-brand" href="javascript:void(0)" th:href="@{/index}">网上商城</a>
+    <div class="container d-flex flex-column flex-md-row justify-content-between navbar-nav">
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           sec:authorize="isAnonymous()" th:href="@{/login}">我的淘宝</a>
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           sec:authorize="hasRole('BUYER')" th:if="${ #authorization.authentication.principal.loginRid =='ROLE_BUYER'}" th:href="@{/myorder(curPage=1,role='BUYER')}">我的淘宝</a>
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           sec:authorize="hasRole('SELLER')" th:if="${ #authorization.authentication.principal.loginRid =='ROLE_SELLER'}" th:href="@{/myorder(curPage=1,role='SELLER')}">我的淘宝</a>
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           th:href="@{/productlist(curPage=1)}">商品分类</a>
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           sec:authorize="isAnonymous()" th:href="@{/login}">购物车</a>
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           sec:authorize="isAuthenticated()" th:href="@{/shoppingcar}" th:if="${ #authorization.authentication.principal.loginRid =='ROLE_BUYER'}">购物车</a>
+        <!--           sec:authorize="isAuthenticated()" th:href="@{/shoppingcar}" th:if="${#authorization.expression('principal.loginRid ==='ROLE_BUYER'')}">购物车</a>-->
+
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           sec:authorize="isAuthenticated()&&!hasRole('SELLER')" th:href="@{/businessRegister}">成为商家</a>
+
+        <a class="nav-item nav-link"  sec:authorize="isAuthenticated()" th:if="${ #authorization.authentication.principal.loginRid =='ROLE_SELLER'}" th:href="@{/myproduct(curPage=1)}">
+            我的商品</a>
+
+        <!--        <a class="nav-item nav-link" sec:authorize="hasRole('SELLER')" th:href="@{/myproduct(curPage=1)}">-->
+        <!--            我的商品</a>-->
+        <a class="nav-item nav-link" href="javascript:void(0)">网站导航</a>
+        <a class="nav-item nav-link" href="javascript:void(0)">联系客服</a>
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           sec:authorize="isAnonymous()" th:href="@{/login}">登陆/注册</a>
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           sec:authorize="isAuthenticated()" th:href="@{/logout}">
+            您好！<span sec:authentication="name">某人</span>&nbsp;&nbsp;退出</a>
+
+    </div>
+</nav>
+
+
+<div id="mContainer" class="container">
+
+    <!-- Modal -->
+    <div class="modal fade" id="successModal" data-keyboard="false"
+         tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">上架成功</h5>
+                </div>
+                <div class="modal-body">
+                    <h5>恭喜您！商品上架成功！</h5>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary btn-block w-50 mx-auto"
+                            data-dismiss="modal">确定</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="input-group mt-3">
+        <input type="text" class="form-control" placeholder="请输入关键字"
+               v-bind:class="{'is-invalid':isInvalid}" v-model="keyWord" @input="textChange">
+        <div class="input-group-append ml-2">
+            <button class="btn btn-outline-secondary" type="button"
+                    @click="searchProduct">搜索
+            </button>
+        </div>
+    </div>
+
+    <form class="mt-5 mx-auto w-50 border p-5">
+        <div class="form-group row">
+            <label for="productName" class="col-sm-3 col-form-label">商品名称</label>
+            <div class="col-sm-9">
+                <input type="text" class="form-control" id="productName" v-model="productName">
+            </div>
+        </div>
+        <div class="form-group row">
+            <label for="price" class="col-sm-3 col-form-label">商品单价</label>
+            <div class="col-sm-9">
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">&yen;</span>
+                    </div>
+                    <input type="text" class="form-control" id="price" v-model="price">
+                    <div class="input-group-append">
+                        <span class="input-group-text">.00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="form-group row">
+            <label for="quantity" class="col-sm-3 col-form-label">商品数量</label>
+            <div class="col-sm-9">
+                <div class="input-group">
+                    <input type="text" class="form-control" id="quantity" v-model="quantity">
+                    <div class="input-group-append">
+                        <span class="input-group-text">件</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="form-group row">
+            <label for="pic" class="col-sm-3 col-form-label">商品图片</label>
+            <div class="col-sm-9">
+                <input type="file" class="form-control-file" id="pic" @change="changeFile">
+            </div>
+        </div>
+        <fieldset class="form-group">
+            <div class="row">
+                <legend class="col-form-label col-sm-3 pt-0">商品类型</legend>
+                <div class="col-sm-9">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="productType" id="type1"
+                               value="1" v-model="typeId">
+                        <label class="form-check-label" for="type1">
+                            服饰
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="productType" id="type2"
+                               value="2" v-model="typeId">
+                        <label class="form-check-label" for="type2">
+                            鞋包
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="productType" id="type3"
+                               value="3" v-model="typeId">
+                        <label class="form-check-label" for="type3">
+                            家电
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="productType" id="type4"
+                               value="4" v-model="typeId">
+                        <label class="form-check-label" for="type4">
+                            家具
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </fieldset>
+
+        <div class="form-group border border-danger"></div>
+
+        <div class="form-group row">
+            <label for="fullName" class="col-sm-3 col-form-label">商品全称</label>
+            <div class="col-sm-9">
+                <input type="text" class="form-control" id="fullName" v-model="fullName">
+            </div>
+        </div>
+
+        <div class="form-group row">
+            <label for="brandName" class="col-sm-3 col-form-label">品牌名称</label>
+            <div class="col-sm-9">
+                <input type="text" class="form-control" id="brandName" v-model="brandName">
+            </div>
+        </div>
+
+        <div class="form-group row">
+            <label for="shelfLife" class="col-sm-3 col-form-label">保质期</label>
+            <div class="col-sm-9">
+                <input type="text" class="form-control" id="shelfLife" v-model="shelfLife">
+            </div>
+        </div>
+
+        <div class="form-group row">
+            <label for="producer" class="col-sm-3 col-form-label">生产厂商</label>
+            <div class="col-sm-9">
+                <input type="text" class="form-control" id="producer" v-model="producer">
+            </div>
+        </div>
+
+        <div class="form-group row">
+            <label for="producerAddress" class="col-sm-3 col-form-label">生产地址</label>
+            <div class="col-sm-9">
+                <input type="text" class="form-control" id="producerAddress" v-model="producerAddress">
+            </div>
+        </div>
+
+        <div class="form-group row">
+            <label for="tel" class="col-sm-3 col-form-label">厂家电话</label>
+            <div class="col-sm-9">
+                <input type="text" class="form-control" id="tel" v-model="producerTel">
+            </div>
+        </div>
+
+        <div class="form-group row">
+            <label for="description" class="col-sm-3 col-form-label">详细描述</label>
+            <div class="col-sm-9">
+                <textarea class="form-control" id="description" rows="5" v-model="description"></textarea>
+            </div>
+        </div>
+
+        <div class="form-group row justify-content-center">
+            <div class="col-sm-5">
+                <button type="button" class="btn btn-primary btn-block"
+                @click="addProduct">上架商品</button>
+            </div>
+        </div>
+    </form>
+
+
+</div>
+
+<div class="border border-danger mt-5"></div>
+<p class="text-black-50 text-center my-5">
+    互联网药品信息服务资格证书（浙）-经营性-2018-0010|短消息类服务接入代码使用证书：号【2016】00154-A01|信息网络传播视听许可证：1109364号|出版物网络交易平台服务经营备案号：新出发浙备字第002号
+</p>
+
+<script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+        crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.0/dist/js/bootstrap.min.js"
+        integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
+        crossorigin="anonymous"></script>
+<script th:inline="javascript">
+    const CODE_OK = 1
+
+    $(function () {
+        var mContainer = new Vue({
+            el: '#mContainer',
+            data: {
+                isInvalid: false,
+                keyWord: [[${keyWord}]],
+                productName: null,
+                price: null,
+                quantity: null,
+                file: null,
+                typeId: null,
+                fullName: null,
+                brandName: null,
+                shelfLife: null,
+                producer: null,
+                producerAddress: null,
+                producerTel: null,
+                description: null
+            },
+            methods: {
+                searchProduct: function (event) {
+                    if (this.keyWord == null || this.keyWord == '') {
+                        this.isInvalid = true
+                    } else {
+                        $(location).attr('href', 'productlist?keyWord=' + this.keyWord +
+                            '&curPage=1')
+                    }
+                },
+                textChange: function (event) {
+                    if (this.keyWord != '') {
+                        this.isInvalid = false
+                    }
+                },
+                changeFile: function (event) {
+                    this.file = event.target.files[0];
+                },
+                addProduct: function () {
+                    var formData = new FormData()
+                    formData.append('productName', this.productName)
+                    formData.append('price', this.price)
+                    formData.append('quantity', this.quantity)
+                    formData.append('file', this.file)
+                    formData.append('typeId', this.typeId)
+                    formData.append('fullName', this.fullName)
+                    formData.append('brandName', this.brandName)
+                    formData.append('shelfLife', this.shelfLife)
+                    formData.append('producer', this.producer)
+                    formData.append('producerAddress', this.producerAddress)
+                    formData.append('producerTel', this.producerTel)
+                    formData.append('description', this.description)
+                    $.ajax({
+                        url: '/product/add',
+                        method: 'post',
+                        data: formData,
+                        contentType: false,
+                        processData: false,
+                        success: (data) => {
+                            if (data.ERROR_CODE == CODE_OK) {
+                                $('#successModal').modal('show')
+                            }else {
+                                alert('上架商品失败！')
+                            }
+                        }
+                    })
+                }
+            }
+        })
+
+        $('#successModal').on('hidden.bs.modal', function (e) {
+            $(location).attr('href', 'myproduct?curPage=1')
+        })
+    })
+</script>
+</body>
+</html>

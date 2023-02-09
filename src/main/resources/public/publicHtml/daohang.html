@@ -1,0 +1,29 @@
+<nav class="navbar navbar-dark bg-dark sticky-top py-1">
+    <a class="navbar-brand" href="javascript:void(0)" th:href="@{/index}">网上商城</a>
+    <div class="container d-flex flex-column flex-md-row justify-content-between navbar-nav">
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           sec:authorize="isAnonymous()" th:href="@{/login}">我的淘宝</a>
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           sec:authorize="hasRole('BUYER')&&!hasRole('SELLER')" th:href="@{/myorder(curPage=1,role='BUYER')}">我的淘宝</a>
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           sec:authorize="hasRole('SELLER') &&!hasRole('BUYER')" th:href="@{/myorder(curPage=1,role='SELLER')}">我的淘宝</a>
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           th:href="@{/productlist(curPage=1)}">商品分类</a>
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           sec:authorize="isAnonymous()" th:href="@{/login}">购物车</a>
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           sec:authorize="isAuthenticated()&&!hasRole('SELLER')" th:href="@{/shoppingcar}">购物车</a>
+
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           sec:authorize="isAuthenticated()&&!hasRole('SELLER')" th:href="@{/businessRegister}">成为商家</a>
+        <a class="nav-item nav-link" sec:authorize="hasRole('SELLER')" th:href="@{/myproduct(curPage=1)}">
+            我的商品</a>
+        <a class="nav-item nav-link" href="javascript:void(0)">网站导航</a>
+        <a class="nav-item nav-link" href="javascript:void(0)">联系客服</a>
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           sec:authorize="isAnonymous()" th:href="@{/login}">登陆/注册</a>
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           sec:authorize="isAuthenticated()" th:href="@{/logout}">
+            您好！<span sec:authentication="name">某人</span>&nbsp;&nbsp;退出</a>
+    </div>
+</nav>

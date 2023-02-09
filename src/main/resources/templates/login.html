@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>商城首页1</title>
+    <!-- <link rel="stylesheet" type="text/css" href="http://hovertree.com/ziyuan/bootstrap/3.3.6/css/bootstrap.min.css" /> -->
+    <link rel="stylesheet" type="text/css" href="./css/loginstyle.css" />
+
+    <link rel="stylesheet" type="text/css" href="http://hovertree.com/texiao/html5/43/css/normalize.css" />
+    <link rel="stylesheet" type="text/css" href="http://hovertree.com/texiao/html5/43/css/hovertree.css">
+    <script src="http://hovertree.com/ziyuan/jquery/jquery-1.12.1.min.js"></script>
+    <script type="text/javascript" src="http://down.hovertree.com/jquery/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="http://hovertree.com/texiao/html5/43/js/jquery.fireworks.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.staticfile.org/jquery/3.2.1/jquery.js"></script>
+
+
+
+
+    <link rel="stylesheet" href="bootstrap-select/bootstrap-select.min.css">
+    <script src="bootstrap-select/bootstrap.js"></script>
+<!--    <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta2/dist/js/bootstrap-select.min.js"></script>-->
+    <script src="bootstrap-select/bootstrap-select.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+    <script type="text/javascript">
+        $(function() {
+            $('#login').click(function() {
+                var name_state = $('#name');
+                var psd_state = $('#psd');
+                var name = $('#name').val();
+                var psd = $('#psd').val();
+                if (name == '') {
+                    name_state.parent().next().next().css("display", "block");
+                    return false;
+                } else if (psd == '') {
+                    name_state.parent().next().next().css("display", "none");
+                    psd_state.parent().next().next().css("display", "block");
+                    return false;
+                } else {
+                    name_state.parent().next().next().css("display", "none");
+                    psd_state.parent().next().next().css("display", "none");
+                }
+            });
+            $('#register').click(function() {
+                var name_r_state = $('#name_r');
+                var psd_r_state = $('#psd_r');
+                var affirm_psd_state = $('#affirm_psd');
+                var name_r = $('#name_r').val();
+                var psd_r = $('#psd_r').val();
+                var affirm_psd = $('#affirm_psd').val();
+                if (name_r == '') {
+                    name_r_state.parent().next().next().css("display", "block");
+                    return false;
+                } else if (psd_r == '') {
+                    psd_r_state.parent().next().next().css("display", "block");
+                    return false;
+                } else if (affirm_psd == '') {
+                    affirm_psd_state.parent().next().next().css("display", "block");
+                    return false;
+                } else if (psd_r != affirm_psd) {
+                    return false;
+                }
+            })
+        })
+
+        function ok_or_errorBylogin(l) {
+            var content = $(l).val();
+            if (content != "") {
+                $(l).parent().next().next().css("display", "none");
+            }
+        }
+
+        function ok_or_errorByRegister(r) {
+            var affirm_psd = $("#affirm_psd");
+            var psd_r = $("#psd_r");
+            var affirm_psd_v = $("#affirm_psd").val();
+            var psd_r_v = $("#psd_r").val();
+            var content = $(r).val();
+            if (content == "") {
+                $(r).parent().next().next().css("display", "block");
+                return false;
+            } else {
+                $(r).parent().next().css("display", "block");
+                $(r).parent().next().next().css("display", "none");
+                if (psd_r_v == "") {
+                    $(psd_r).parent().next().css("display", "none");
+                    $(psd_r).parent().next().next().css("display", "none");
+                    $(psd_r).parent().next().next().css("display", "block");
+                    return false;
+                }
+                if (affirm_psd_v == "") {
+                    $(affirm_psd_v).parent().next().css("display", "none");
+                    $(affirm_psd_v).parent().next().next().css("display", "none");
+                    $(affirm_psd_v).parent().next().next().css("display", "block");
+                    return false;
+                }
+                if (psd_r_v == affirm_psd_v) {
+                    $(affirm_psd).parent().next().css("display", "none");
+                    $(affirm_psd).parent().next().next().css("display", "none");
+                    $(psd_r).parent().next().css("display", "none");
+                    $(psd_r).parent().next().next().css("display", "none");
+                    $(affirm_psd).parent().next().css("display", "block");
+                    $(psd_r).parent().next().css("display", "block");
+                } else {
+                    $(affirm_psd).parent().next().css("display", "none");
+                    $(affirm_psd).parent().next().next().css("display", "none");
+                    $(psd_r).parent().next().css("display", "none");
+                    $(psd_r).parent().next().next().css("display", "none");
+                    $(psd_r).parent().next().css("display", "block");
+                    $(affirm_psd).parent().next().next().css("display", "block");
+                    return false;
+                }
+            }
+        }
+
+        function barter_btn(bb) {
+            console.log(bb)
+            if(bb=="barter_registerBtn"){
+                $("#register_app").attr("style","display:none;");
+                $('#login_app').attr("style","display:block");
+            }else{
+                $("#login_app").attr("style","display:none;");
+                $('#register_app').attr("style","display:block");
+            }
+            // $(bb).parent().parent().attr("style","display:none;");
+            // $(bb).parent().parent().siblings()[0].attr("style","display:block;");
+            // $('#register_app').attr("style","display:block");
+            // console.log("$(bb).parent().parent().siblings()=")
+            // console.log($(bb).parent().parent().siblings()[0])
+            // console.log($(bb).parent().parent().siblings())
+
+            // $(bb).parent().parent().fadeOut(1000);
+            // $(bb).parent().parent().siblings().fadeIn(1000);
+        }
+    </script>
+</head>
+<body class="login_body hovertree">
+<div class="login_div" id="login_app" style="display:block;">
+    <div class="col-xs-12 login_title">登录</div>
+    <form class="login">
+        <div class="nav">
+            <div class="nav login_psdNav">
+                <div class="col-xs-4 login_username">
+                    用户名:
+                </div>
+                <div class="col-xs-6 login_usernameInput">
+                    <input type="text" name="name" v-model="username" id="name" value="" placeholder="用户名/手机号" onblur="javascript:ok_or_errorBylogin(this)" />
+                </div>
+                <div class="col-xs-1 ok_gou">
+                    √
+                </div>
+                <div class="col-xs-1 error_cuo">
+                    ×
+                </div>
+            </div>
+            <div class="nav login_psdNav">
+                <div class="col-xs-4">
+                    密&nbsp;&nbsp;&nbsp;码:
+                </div>
+                <div class="col-xs-6">
+                    <input type="password" name="password" id="psd" v-model="password" value="" placeholder="密码" onBlur="javascript:ok_or_errorBylogin(this)" />
+                </div>
+                <div class="col-xs-1 ok_gou">
+                    √
+                </div>
+                <div class="col-xs-1 error_cuo">
+                    ×
+                </div>
+            </div>
+            <!--登录权限-->
+            <div class="nav login_psdNav">
+                <div class="col-xs-4">
+                    角&nbsp;&nbsp;色:
+                </div>
+                <select class="selectpicker">
+                    <option v-model="role" value="ROLE_BUYER">买家</option>
+                    <option v-model="role" value="ROLE_SELLER">卖家</option>
+                    <option v-model="role" value="ROLE_ADMIN">管理员</option>
+                </select>
+            </div>
+            <div class="col-xs-12 login_btn_div">
+                <input type="button" class="sub_btn" value="登录" id="login" v-on:click="login(this)" />
+            </div>
+        </div>
+    </form>
+
+    <div class="col-xs-12 barter_btnDiv">
+        <button class="barter_btn" onClick="javascript:barter_btn('barter_btn')">没有账号?前往注册</button>
+    </div>
+</div>
+
+<div class="register_body" id="register_app" style="display:none;">
+    <div class="col-xs-12 register_title">注册</div>
+    <form class="register">
+        <div class="nav">
+            <div class="nav register_nav">
+                <div class="col-xs-4">
+                    用户名:
+                </div>
+                <div class="col-xs-6">
+                    <input type="text" name="name" v-model="userName" id="name_r" value="" placeholder="  用户名/手机号" onBlur="javascript:ok_or_errorByRegister(this)" />
+                </div>
+                <div class="col-xs-1 ok_gou">
+                    √
+                </div>
+                <div class="col-xs-1 error_cuo">
+                    ×
+                </div>
+            </div>
+            <div class="nav register_psdnav">
+                <div class="col-xs-4">
+                    密&nbsp;&nbsp;&nbsp;码:
+                </div>
+                <div class="col-xs-6">
+                    <input type="password" name="password" id="psd_r" value="" v-model="userPassword" placeholder="密码" onBlur="javascript:ok_or_errorByRegister(this)" />
+                </div>
+                <div class="col-xs-1 ok_gou">
+                    √
+                </div>
+                <div class="col-xs-1 error_cuo">
+                    ×
+                </div>
+            </div>
+            <div class="nav register_affirm">
+                <div class="col-xs-4">
+                    确认密码:
+                </div>
+                <div class="col-xs-6">
+                    <input type="password" name="affirm_psd-psd" v-model="affirm_psd" id="affirm_psd" value="" placeholder="确认密码"
+                           onBlur="javascript:ok_or_errorByRegister(this)" />
+                </div>
+                <div class="col-xs-1 ok_gou">
+                    √
+                </div>
+                <div class="col-xs-1 error_cuo">
+                    ×
+                </div>
+            </div>
+
+
+            <div class="nav register_affirm">
+                <div class="col-xs-4">
+                    性别:
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="gender" v-model="gender" id="man" value="true" checked="true">
+                    <label class="form-check-label" for="man">
+                        男
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="gender" v-model="gender" value="false" id="woman">
+                    <label class="form-check-label" for="woman">
+                        女
+                    </label>
+                </div>
+            </div>
+
+
+            <div class="nav register_affirm">
+                <div class="col-xs-4">
+                    手机号码:
+                </div>
+                <div class="col-xs-6">
+                    <input type="text" class="regist_input" name="phone" id="phone_r" value="" v-model="phone" placeholder="手机号码"
+                           onBlur="javascript:ok_or_errorByRegister(this)" />
+                </div>
+                <div class="col-xs-1 ok_gou">
+                    √
+                </div>
+                <div class="col-xs-1 error_cuo">
+                    ×
+                </div>
+            </div>
+            <div class="nav register_affirm">
+                <div class="col-xs-4">
+                    地址:
+                </div>
+                <div class="col-xs-6">
+                    <input type="text" name="address" id="addr_r" value="" v-model="address" placeholder="地址" onBlur="javascript:ok_or_errorByRegister(this)" />
+                </div>
+                <div class="col-xs-1 ok_gou">
+                    √
+                </div>
+                <div class="col-xs-1 error_cuo">
+                    ×
+                </div>
+            </div>
+
+
+            <div class="col-xs-12 register_btn_div">
+                <input type="button" class="sub_btn" value="注册" id="register" v-on:click="register" />
+            </div>
+        </div>
+    </form>
+    <div class="col-xs-12 barter_register">
+        <button class="barter_registerBtn" onClick="javascript:barter_btn('barter_registerBtn')" style="">已有账号?返回登录				</button>
+    </div>
+</div>
+
+
+
+
+
+<script>
+
+    // $(document).ready(function(){
+    //     $('.selectpicker').selectpicker({
+    //
+    //     });
+    // });
+
+    var registApp = new Vue({
+        el: '#register_app',
+        data: {
+            userName: "",
+            userPassword: "",
+            affirm_psd: "",
+            gender: "true",
+            phone: "",
+            address: "",
+            rid: "1"
+        },
+        methods: {
+            register: function (event) {
+
+                var user = {
+                    name: this.userName,
+                    password: this.userPassword,
+                    gender: this.gender,
+                    phone: this.phone,
+                    address: this.address,
+                    rid: "1"
+                }
+                console.log("user:")
+                console.log(user)
+                $.post("/user/register", {
+                        name: this.userName,
+                        password: this.userPassword,
+                        gender: this.gender,
+                        phone: this.phone,
+                        address: this.address,
+                        rid: "1"
+                    },
+                    function (data) {
+                        if (data.ERROR_CODE == 1) {
+                            alert("注册成功！请前往登录")
+                            $("#register_app").fadeOut(1000);
+                            $("#login_app").fadeIn(2000);
+                        }else{
+                            alert(data.ERROR_MSSAGE+" 请重试");
+                        }
+                    });
+
+
+            }
+
+        }
+
+    })
+
+    var loginApp = new Vue({
+        el: "#login_app",
+        data: {
+            username: "",
+            password: "",
+            role:"ROLE_BUYER"
+        },
+        methods: {
+            login: function (even) {
+                var value = $('.selectpicker').val();
+                this.role=value;
+                // alert("role value="+value)
+                $.post("/user/login",
+                    {
+                        name: this.username,
+                        password: this.password,
+                        role:value
+                    },
+                    function success(data) {
+                        // alert(data.ERROR_CODE + "  " + data.ERROR_MSSAGE)
+                        if(data.ERROR_CODE==1){
+                            // alert(data.ERROR_MSSAGE)
+                            // alert("role=")
+                            // alert(value)
+                            if(value=="ROLE_ADMIN"){
+                                $(location).attr("href","/admin/index")
+                            }else{
+                                $(location).attr("href","/index")
+                            }
+                        }else{
+                            alert(data.ERROR_CODE + "  " + data.ERROR_MSSAGE)
+                        }
+
+                    }
+                )
+            }
+        }
+    })
+
+
+</script>
+</body>
+</html>

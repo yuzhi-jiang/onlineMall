@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.0/dist/css/bootstrap.min.css"
+          integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <title>商品列表</title>
+</head>
+<body>
+
+<!-- 导航条 -->
+<nav class="navbar navbar-dark bg-dark sticky-top py-1">
+    <a class="navbar-brand" href="javascript:void(0)" th:href="@{/index}">网上商城</a>
+    <div class="container d-flex flex-column flex-md-row justify-content-between navbar-nav">
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           sec:authorize="isAnonymous()" th:href="@{/login}">我的淘宝</a>
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           sec:authorize="hasRole('BUYER')" th:if="${ #authorization.authentication.principal.loginRid ==1}" th:href="@{/myorder(curPage=1,role='BUYER')}">我的淘宝</a>
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           sec:authorize="hasRole('SELLER')" th:if="${ #authorization.authentication.principal.loginRid ==2}" th:href="@{/myorder(curPage=1,role='SELLER')}">我的淘宝</a>
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           th:href="@{/productlist(curPage=1)}">商品分类</a>
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           sec:authorize="isAnonymous()" th:href="@{/login}">购物车</a>
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           sec:authorize="isAuthenticated()" th:href="@{/shoppingcar}" th:if="${ #authorization.authentication.principal.loginRid ==1}">购物车</a>
+
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           sec:authorize="isAuthenticated()&&!hasRole('SELLER')" th:href="@{/businessRegister}">成为商家</a>
+
+        <a class="nav-item nav-link"  sec:authorize="isAuthenticated()" th:if="${ #authorization.authentication.principal.loginRid ==2}" th:href="@{/myproduct(curPage=1)}">
+            我的商品</a>
+
+        <!--        <a class="nav-item nav-link" sec:authorize="hasRole('SELLER')" th:href="@{/myproduct(curPage=1)}">-->
+        <!--            我的商品</a>-->
+        <a class="nav-item nav-link" href="javascript:void(0)">网站导航</a>
+        <a class="nav-item nav-link" href="javascript:void(0)">联系客服</a>
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           sec:authorize="isAnonymous()" th:href="@{/login}">登陆/注册</a>
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           sec:authorize="isAuthenticated()" th:href="@{/logout}">
+            您好！<span sec:authentication="name">某人</span>&nbsp;&nbsp;退出</a>
+
+    </div>
+</nav>
+
+
+<div id="mContainer" class="container">
+
+    <div class="input-group mt-3">
+        <input type="text" class="form-control" placeholder="请输入关键字"
+               v-bind:class="{'is-invalid':isInvalid}" v-model="keyWord" @input="textChange">
+        <div class="input-group-append ml-2">
+            <button class="btn btn-outline-secondary" type="button"
+                    @click="searchProduct">搜索
+            </button>
+        </div>
+    </div>
+
+    <div class="mt-5 container">
+        <div class="my-3 row border">
+            <div class="col-2 bg-light text-dark py-2">
+                <span class="h5">商品类型</span>
+            </div>
+            <div class="col-10 d-flex align-items-center">
+                <button type="button" class="btn btn-outline-danger mx-2"
+                        v-bind:class="{'active':isProductType1}" @click="productTypeClick(1)">服装衣饰
+                </button>
+                <button type="button" class="btn btn-outline-danger mx-2"
+                        v-bind:class="{'active':isProductType2}" @click="productTypeClick(2)">鞋子箱包
+                </button>
+                <button type="button" class="btn btn-outline-danger mx-2"
+                        v-bind:class="{'active':isProductType3}" @click="productTypeClick(3)">日用家电
+                </button>
+                <button type="button" class="btn btn-outline-danger mx-2"
+                        v-bind:class="{'active':isProductType4}" @click="productTypeClick(4)">全屋家具
+                </button>
+            </div>
+        </div>
+        <div class="my-3 row border">
+            <div class="col-2 bg-light text-dark py-2">
+                <span class="h5">价格区间</span>
+            </div>
+            <div class="col-10 d-flex align-items-center">
+                <div class="input-group w-25">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">&yen;</span>
+                    </div>
+                    <input type="text" class="form-control" v-model="tempPriceMin">
+                    <div class="input-group-append">
+                        <span class="input-group-text">.00</span>
+                    </div>
+                </div>
+                <span class="text-secondary font-weight-bold mx-2">-&nbsp;&nbsp;-</span>
+                <div class="input-group w-25">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">&yen;</span>
+                    </div>
+                    <input type="text" class="form-control" v-model="tempPriceMax">
+                    <div class="input-group-append">
+                        <span class="input-group-text">.00</span>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-danger ml-2" @click="priceSearch">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mt-2" style="padding: 0">
+
+<!--        <div class="d-flex justify-content-between mt-3" >-->
+
+<!--            &lt;!&ndash; 第一列 &ndash;&gt;-->
+<!--            <div class="card" style="width: 16rem;" v-for="product in productList">-->
+<!--                &lt;!&ndash;                         v-for="(product,index) in productType.products" v-if="index<4":key="index"&ndash;&gt;-->
+
+<!--                <img :src="'/img/' + product.picPath" class="card-img-top" alt="..." >-->
+<!--                <div class="card-body">-->
+<!--                    <h5 class="card-title text-danger">&yen;{{product.price | formatPrice}}</h5>-->
+
+<!--                    &lt;!&ndash;                            <a href="javascript:void(0)" class="stretched-link text-decoration-none text-dark"&ndash;&gt;-->
+<!--                    &lt;!&ndash;                               th:text="${product.productName}" th:href="@{/productdetail(id=${product.id})}">商品名称</a>&ndash;&gt;-->
+<!--                    <a :href="'/productdetail?id=' + product.id" class="stretched-link" >{{product.productName}}</a>-->
+<!--                    <p class="card-text">库存:{{product.quantity}}</p>-->
+<!--                </div>-->
+<!--            </div>-->
+
+<!--        </div>-->
+
+
+        <div class="row justify-content-between no-gutters">
+
+
+
+            <div class="card col-auto mb-4" style="width: 16rem;height: 20rem" v-for="product in productList">
+                <div class="d-flex align-items-center justify-content-center shadow-sm"
+                     style="width: 100%;">
+                    <img :src="'/img/' + product.picPath" style="max-width: 100%;max-height: 100%">
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title font-weight-bold" style="color: red">
+                        &yen;{{product.price | formatPrice}}</h5>
+                    <a class="stretched-link text-decoration-none text-dark"
+                       :href="'/productdetail?id=' + product.id">{{product.productName}}</a>
+                    <p class="card-text position-absolute text-black-50" style="bottom: 0px">
+                        {{product.sellerName}}</p>
+                </div>
+            </div>
+            <div class="col-auto" style="width: 16rem;height: 0px"></div>
+            <div class="col-auto" style="width: 16rem;height: 0px"></div>
+            <div class="col-auto" style="width: 16rem;height: 0px"></div>
+        </div>
+    </div>
+
+    <nav class="mt-5" v-if="totalPage > 0">
+        <ul class="pagination justify-content-center">
+            <li class="page-item" v-if="curPage > 1">
+                <a class="page-link" href="javascript:void(0)"
+                   @click="selectPage(curPage-1)">&lt;上一页</a>
+            </li>
+            <li class="page-item disabled" v-else>
+                <span class="page-link">&lt;上一页</span>
+            </li>
+
+            <template v-if="curPage <= 2">
+                <template v-for="page in (totalPage <= 5 ? totalPage : 5)">
+                    <li class="page-item" v-if="curPage != page">
+                        <a class="page-link" href="javascript:void(0)"
+                           @click="selectPage(page)">{{page}}</a>
+                    </li>
+                    <li class="page-item active" v-else>
+                        <span class="page-link">{{page}}</span>
+                    </li>
+                </template>
+                <li class="page-item disabled" v-if="totalPage > 5">
+                    <span class="page-link">...</span>
+                </li>
+            </template>
+
+            <template v-if="curPage >= 3 && curPage <= 5">
+                <template v-for="page in (totalPage <= (curPage + 3) ? totalPage : (curPage + 2))">
+                    <li class="page-item" v-if="curPage != page">
+                        <a class="page-link" href="javascript:void(0)"
+                           @click="selectPage(page)">{{page}}</a>
+                    </li>
+                    <li class="page-item active" v-else>
+                        <span class="page-link">{{page}}</span>
+                    </li>
+                </template>
+                <li class="page-item disabled" v-if="totalPage - curPage > 3">
+                    <span class="page-link">...</span>
+            </template>
+
+            <template v-if="curPage >= 6">
+                <li class="page-item">
+                    <a class="page-link" href="javascript:void(0)"
+                       @click="selectPage(1)">1</a>
+                </li>
+                <li class="page-item" v-if="totalPage > 6">
+                    <a class="page-link" href="javascript:void(0)"
+                       @click="selectPage(2)">2</a>
+                </li>
+                <li class="page-item disabled" v-if="totalPage > 7">
+                    <span class="page-link">...</span>
+                </li>
+                <template v-if="(totalPage - curPage) == 3">
+                    <template v-for="page in 6">
+                        <li class="page-item" v-if="curPage != totalPage - 6 + page">
+                            <a class="page-link" href="javascript:void(0)"
+                               @click="selectPage(totalPage - 6 + page)">{{totalPage - 6 + page}}</a>
+                        </li>
+                        <li class="page-item active" v-else>
+                            <span class="page-link">{{curPage}}</span>
+                        </li>
+                    </template>
+                </template>
+                <template v-else-if="(totalPage - curPage) < 3">
+                    <template v-for="page in 5">
+                        <li class="page-item" v-if="curPage != totalPage - 5 + page">
+                            <a class="page-link" href="javascript:void(0)"
+                               @click="selectPage(totalPage - 5 + page)">{{totalPage - 5 + page}}</a>
+                        </li>
+                        <li class="page-item active" v-else>
+                            <span class="page-link">{{curPage}}</span>
+                        </li>
+                    </template>
+                </template>
+                <template v-else>
+                    <template v-for="page in 5">
+                        <li class="page-item" v-if="curPage != curPage - 3 + page">
+                            <a class="page-link" href="javascript:void(0)"
+                               @click="selectPage(curPage - 3 + page)">{{curPage - 3 + page}}</a>
+                        </li>
+                        <li class="page-item active" v-else>
+                            <span class="page-link">{{curPage}}</span>
+                        </li>
+                    </template>
+                </template>
+                <li class="page-item disabled" v-if="totalPage - curPage > 3">
+                    <span class="page-link">...</span>
+            </template>
+            <li class="page-item" v-if="curPage < totalPage">
+                <a class="page-link" href="javascript:void(0)"
+                   @click="selectPage(curPage+1)">下一页&gt;</a>
+            </li>
+            <li class="page-item disabled" v-else>
+                <span class="page-link">下一页&gt;</span>
+            </li>
+            <div class="d-flex align-items-center">
+                <div class="text-secondary ml-3 small">共{{totalPage}}页，</div>
+                <div class="text-secondary small mx-1">到第</div>
+                <input type="text" class="form-control mx-1 form-control-sm"
+                       style="width: 3rem" :placeholder="curPage" v-model="inputPage">
+                <div class="text-secondary small mx-1">页</div>
+                <button class="btn btn-outline-secondary btn-sm" type="button"
+                        @click="toPage">确定</button>
+            </div>
+        </ul>
+    </nav>
+
+</div>
+
+<div class="border border-danger mt-5"></div>
+<p class="text-black-50 text-center my-5">
+    互联网药品信息服务资格证书（浙）-经营性-2018-0010|短消息类服务接入代码使用证书：号【2016】00154-A01|信息网络传播视听许可证：1109364号|出版物网络交易平台服务经营备案号：新出发浙备字第002号
+</p>
+
+
+<script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+        crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.0/dist/js/bootstrap.min.js"
+        integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
+        crossorigin="anonymous"></script>
+<script th:inline="javascript">
+    const CODE_OK = 1
+
+    $(function () {
+        var mContainer = new Vue({
+            el: '#mContainer',
+            data: {
+                isInvalid: false,
+                keyWord: [[${keyWord}]],
+                typeId: [[${typeId}]],
+                priceMin: [[${priceMin}]],
+                priceMax: [[${priceMax}]],
+                tempPriceMin: [[${priceMin}]],
+                tempPriceMax: [[${priceMax}]],
+                productList: [],
+                curPage: [[${curPage}]],
+                rowsPerPage: [[${rowsPerPage}]],
+                totalPage: null,
+                inputPage: null
+            },
+            computed: {
+                isProductType1: function () {
+                    return this.typeId == 1
+                },
+                isProductType2: function () {
+                    return this.typeId == 2
+                },
+                isProductType3: function () {
+                    return this.typeId == 3
+                },
+                isProductType4: function () {
+                    return this.typeId == 4
+                }
+            },
+            created: function () {
+                $.get(
+                    'product/list',
+                    {
+                        typeId: this.typeId,
+                        keyWord: this.keyWord,
+                        priceMin: this.priceMin,
+                        priceMax: this.priceMax,
+                        curPage: this.curPage,
+                        rowsPerPage: this.rowsPerPage
+                    },
+                    (data) => {
+                        if (data.ERROR_CODE == CODE_OK) {
+                            this.productList = data.productList
+                            this.totalPage = data.totalPage
+                        }
+                    }
+                )
+            },
+            filters: {
+                formatPrice: function (value) {
+                    var str = value.toString();
+                    if (str.indexOf('.') > -1) {
+                        var idx = str.indexOf('.');
+                        if (idx + 2 > str.length - 1) {
+                            str += '0'
+                        } else {
+                            str = str.substring(0, idx + 3)
+                        }
+                    } else {
+                        str += '.00'
+                    }
+                    return str
+                }
+            },
+            methods: {
+                searchProduct: function (event) {
+                    if (this.keyWord == null || this.keyWord == '') {
+                        this.isInvalid = true
+                    } else {
+                        $(location).attr('href', 'productlist?keyWord=' + this.keyWord +
+                        '&curPage=1')
+                    }
+                },
+                textChange: function (event) {
+                    if (this.keyWord != '') {
+                        this.isInvalid = false
+                    }
+                },
+                productTypeClick: function (typeId) {
+                    this.typeId = typeId
+                    this.tempPriceMin = this.priceMin
+                    this.tempPriceMax = this.priceMax
+                    var href = 'productlist?keyWord='
+                    if (this.keyWord) {
+                        href += this.keyWord
+                    }
+                    href += '&typeId='
+                    if (this.typeId) {
+                        href += this.typeId
+                    }
+                    href += '&priceMin='
+                    if (this.priceMin) {
+                        href += this.priceMin
+                    }
+                    href += '&priceMax='
+                    if (this.priceMax) {
+                        href += this.priceMax
+                    }
+                    href += '&curPage=1'
+                    $(location).attr('href', href)
+                },
+                priceSearch: function (event) {
+                    this.priceMin = this.tempPriceMin
+                    this.priceMax = this.tempPriceMax
+                    var href = 'productlist?keyWord='
+                    if (this.keyWord) {
+                        href += this.keyWord
+                    }
+                    href += '&typeId='
+                    if (this.typeId) {
+                        href += this.typeId
+                    }
+                    href += '&priceMin='
+                    if (this.priceMin) {
+                        href += this.priceMin
+                    }
+                    href += '&priceMax='
+                    if (this.priceMax) {
+                        href += this.priceMax
+                    }
+                    href += '&curPage=1'
+                    $(location).attr('href', href)
+                },
+                selectPage: function (page) {
+                    var href = 'productlist?keyWord='
+                    if (this.keyWord) {
+                        href += this.keyWord
+                    }
+                    href += '&typeId='
+                    if (this.typeId) {
+                        href += this.typeId
+                    }
+                    href += '&priceMin='
+                    if (this.priceMin) {
+                        href += this.priceMin
+                    }
+                    href += '&priceMax='
+                    if (this.priceMax) {
+                        href += this.priceMax
+                    }
+                    href += '&curPage='
+                    href += page
+                    $(location).attr('href', href)
+                },
+                toPage: function () {
+                    var regPos = /^\d+$/;
+                    if (regPos.test(this.inputPage)) {
+                        if (parseInt(this.inputPage) > parseInt(this.totalPage)) {
+                            return
+                        }
+                        var href = 'productlist?keyWord='
+                        if (this.keyWord) {
+                            href += this.keyWord
+                        }
+                        href += '&typeId='
+                        if (this.typeId) {
+                            href += this.typeId
+                        }
+                        href += '&priceMin='
+                        if (this.priceMin) {
+                            href += this.priceMin
+                        }
+                        href += '&priceMax='
+                        if (this.priceMax) {
+                            href += this.priceMax
+                        }
+                        href += '&curPage='
+                        href += this.inputPage
+                        $(location).attr('href', href)
+                    }
+                }
+            }
+        })
+    })
+</script>
+</body>
+</html>

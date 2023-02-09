@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.0/dist/css/bootstrap.min.css"
+          integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <title>订单确认</title>
+</head>
+<body>
+
+<!-- Modal -->
+<div class="modal fade" id="successModal" data-keyboard="false"
+     tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">支付成功</h5>
+            </div>
+            <div class="modal-body">
+                <h5>恭喜您！订单支付成功</h5>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary btn-block w-50 mx-auto"
+                        data-dismiss="modal">确定</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- 导航条 -->
+<nav class="navbar navbar-dark bg-dark sticky-top py-1">
+    <a class="navbar-brand" href="javascript:void(0)" th:href="@{/index}">网上商城</a>
+    <div class="container d-flex flex-column flex-md-row justify-content-between navbar-nav">
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           sec:authorize="isAnonymous()" th:href="@{/login}">我的淘宝</a>
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           sec:authorize="hasRole('BUYER')" th:if="${ #authorization.authentication.principal.loginRid ==1}" th:href="@{/myorder(curPage=1,role='BUYER')}">我的淘宝</a>
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           sec:authorize="hasRole('SELLER')" th:if="${ #authorization.authentication.principal.loginRid ==2}" th:href="@{/myorder(curPage=1,role='SELLER')}">我的淘宝</a>
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           th:href="@{/productlist(curPage=1)}">商品分类</a>
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           sec:authorize="isAnonymous()" th:href="@{/login}">购物车</a>
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           sec:authorize="isAuthenticated()" th:href="@{/shoppingcar}" th:if="${ #authorization.authentication.principal.loginRid ==1}">购物车</a>
+
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           sec:authorize="isAuthenticated()&&!hasRole('SELLER')" th:href="@{/businessRegister}">成为商家</a>
+
+        <a class="nav-item nav-link"  sec:authorize="isAuthenticated()" th:if="${ #authorization.authentication.principal.loginRid ==2}" th:href="@{/myproduct(curPage=1)}">
+            我的商品</a>
+
+        <!--        <a class="nav-item nav-link" sec:authorize="hasRole('SELLER')" th:href="@{/myproduct(curPage=1)}">-->
+        <!--            我的商品</a>-->
+        <a class="nav-item nav-link" href="javascript:void(0)">网站导航</a>
+        <a class="nav-item nav-link" href="javascript:void(0)">联系客服</a>
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           sec:authorize="isAnonymous()" th:href="@{/login}">登陆/注册</a>
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           sec:authorize="isAuthenticated()" th:href="@{/logout}">
+            您好！<span sec:authentication="name">某人</span>&nbsp;&nbsp;退出</a>
+
+    </div>
+</nav>
+
+
+<div id="mContainer" class="container">
+
+    <div class="input-group mt-3">
+        <input type="text" class="form-control" placeholder="请输入关键字"
+               v-bind:class="{'is-invalid':isInvalid}" v-model="keyWord" @input="textChange">
+        <div class="input-group-append ml-2">
+            <button class="btn btn-outline-secondary" type="button"
+                    @click="searchProduct">搜索
+            </button>
+        </div>
+    </div>
+
+    <div class="border h5 mt-5 p-3 mb-0">
+        收件人信息
+    </div>
+    <div class="border p-3 d-flex flex-column">
+        <div class="h5">收件人姓名：<span sec:authentication="principal.username">xxxx</span></div>
+        <div class="h5">性别：
+            <span th:text="${#authentication.principal.gender}? '男性' : '女性'">xxxx</span>
+        </div>
+        <div class="h5">收货地址：<span sec:authentication="principal.address">xxxx</span></div>
+        <div class="h5">手机号：<span sec:authentication="principal.phone">xxxx</span></div>
+    </div>
+
+    <div class="container">
+        <div class="h5 mt-5 p-3 mb-0">
+            确认订单信息
+        </div>
+        <div class="row mt-4">
+            <div class="col-3 text-center">
+                店铺宝贝
+            </div>
+            <div class="col-3 text-center">
+                商品属性
+            </div>
+            <div class="col-2 text-center">
+                单价
+            </div>
+            <div class="col-2 text-center">
+                数量
+            </div>
+            <div class="col-2 text-center">
+                小计
+            </div>
+        </div>
+        <div class="border border-primary mt-1"></div>
+
+        <div class="mt-4" v-for="(product, index) in productItems">
+            <div class="ml-3">店铺：{{product.sellerName}}的店</div>
+            <div class="row border py-3" style="background: rgba(0,0,255,0.05)">
+                <div class="col-3 d-flex">
+                    <img :src="'/img/' + product.picPath" class="mw-100 mh-100"
+                         style="width: 50px;height: 50px">
+                    <div class="ml-1">
+                        {{product.productName}}
+                    </div>
+                </div>
+                <div class="col-3 d-flex flex-column">
+                    <div>品牌：{{product.brandName}}</div>
+                    <div>保质期：{{product.shelfLife}}</div>
+                    <div>制造商：{{product.producer}}</div>
+                </div>
+                <div class="col-2 text-center">
+                    &yen;{{product.price | formatPrice}}
+                </div>
+                <div class="col-2 d-flex justify-content-center">
+                    <button type="button" class="border bg-white text-center"
+                            @click="amountChange(-1, index)"
+                            style="height: 28px;width: 28px;line-height: 28px">
+                        -
+                    </button>
+                    <input type="text" class="form-control form-control-sm"
+                           style="width: 3rem; height: 28px" v-model="product.amount">
+                    <button type="button" class="border bg-white text-center"
+                            @click="amountChange(1, index)"
+                            style="height: 28px;width: 28px;line-height: 28px">
+                        +
+                    </button>
+                </div>
+                <div class="col-2 text-right">
+                    <span class="text-danger h5 font-weight-bolder">
+                        &yen;{{product.price*product.amount | formatPrice}}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="row justify-content-end mt-5">
+            <div class="col-4 d-flex flex-column align-items-end py-3" style="border: solid red 3px">
+                <div class="mb-4">
+                    <span class="font-weight-bold">实付款：</span>
+                    <span class="h2 font-weight-bold text-secondary">&yen;</span>
+                    <span class="h2 font-weight-bold text-danger">{{totalPrice | formatPrice}}</span>
+                </div>
+                <div>
+                    <span class="font-weight-bold">寄送至：</span>
+                    <span sec:authentication="principal.address">xxxx</span>
+                </div>
+                <div>
+                    <span class="font-weight-bold">收货人：</span>
+                    <span sec:authentication="principal.username">xxxx</span>&nbsp;&nbsp;
+                    <span sec:authentication="principal.phone">xxxx</span>
+                </div>
+            </div>
+            <div class="w-100"></div>
+            <div class="col-2 p-0">
+                <button type="button" class="btn btn-danger w-100" style="border-radius: 0"
+                        @click="submitOrder">
+                    确认付款
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+
+</div>
+
+<div class="border border-danger mt-5"></div>
+<p class="text-black-50 text-center my-5">
+    互联网药品信息服务资格证书（浙）-经营性-2018-0010|短消息类服务接入代码使用证书：号【2016】00154-A01|信息网络传播视听许可证：1109364号|出版物网络交易平台服务经营备案号：新出发浙备字第002号
+</p>
+
+
+<script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+        crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.0/dist/js/bootstrap.min.js"
+        integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
+        crossorigin="anonymous"></script>
+
+<script th:inline="javascript">
+
+    const CODE_OK = 1
+    $(function () {
+        var vm = new Vue({
+            el: '#mContainer',
+            data: {
+                isInvalid: false,
+                keyWord: '',
+                productItems: [[${productItems}]],
+                isFromShoppingCar: [[${isFromShoppingCar}]]
+            },
+            filters: {
+                formatPrice: function (value) {
+                    var str = value.toString();
+                    if (str.indexOf('.') > -1) {
+                        var idx = str.indexOf('.');
+                        if (idx + 2 > str.length - 1) {
+                            str += '0'
+                        } else {
+                            str = str.substring(0, idx + 3)
+                        }
+                    } else {
+                        str += '.00'
+                    }
+                    return str
+                }
+            },
+            computed: {
+                totalPrice: function () {
+                    var sum = 0
+                    for (idx in this.productItems) {
+                        sum += this.productItems[idx].price * this.productItems[idx].amount
+                    }
+                    return sum
+                }
+            },
+            methods: {
+                searchProduct: function (event) {
+                    if (this.keyWord == '') {
+                        this.isInvalid = true
+                    } else {
+                        $(location).attr('href', 'productlist?keyWord=' + this.keyWord +
+                            '&curPage=1')
+                    }
+                },
+                textChange: function (event) {
+                    if (this.keyWord != '') {
+                        this.isInvalid = false
+                    }
+                },
+                amountChange: function (data, i) {
+                    var regPos = /^\d+$/;
+                    if (regPos.test(this.productItems[i].amount)) {
+                        valInt = parseInt(this.productItems[i].amount, 10)
+                        if (valInt + data >= 1 && valInt + data <= this.productItems[i].quantity) {
+                            valInt += data
+                            this.productItems[i].amount = valInt
+                        }
+                    }
+                },
+                submitOrder: function () {
+                    var url = 'order/create?isFromShoppingCar='
+                    if (this.isFromShoppingCar) {
+                        url += 'true'
+                    }else {
+                        url += 'false'
+                    }
+                    $.ajax({
+                            url: url,
+                            method: 'post',
+                            data: JSON.stringify(this.productItems),
+                            contentType: 'application/json;charset=utf-8',
+                            success: (data) => {
+                                if (data.ERROR_CODE == CODE_OK) {
+                                    $('#successModal').modal('show')
+                                }else {
+                                    alert("订单支付失败!")
+                                }
+                            }
+                        }
+                    )
+                }
+            }
+        })
+
+        $('#successModal').on('hidden.bs.modal', function (e) {
+            $(location).attr('href', 'index')
+        })
+    })
+
+
+</script>
+</body>
+</html>

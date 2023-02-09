@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.0/dist/css/bootstrap.min.css"
+          integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <title>商品修改</title>
+</head>
+	<body>
+		<div id="mContainer">
+			<form class="mt-5 mx-auto w-50 border p-5">
+			       <div class="form-group row">
+			           <label for="productName" class="col-sm-3 col-form-label">商品名称</label>
+			           <div class="col-sm-9">
+			               <input type="text" class="form-control" id="productName" v-model="productName">
+			           </div>
+			       </div>
+			       <div class="form-group row">
+			           <label for="price" class="col-sm-3 col-form-label">商品单价</label>
+			           <div class="col-sm-9">
+			               <div class="input-group">
+			                   <div class="input-group-prepend">
+			                       <span class="input-group-text">&yen;</span>
+			                   </div>
+			                   <input type="text" class="form-control" id="price" v-model="price">
+			                   <div class="input-group-append">
+			                       <span class="input-group-text">.00</span>
+			                   </div>
+			               </div>
+			           </div>
+			       </div>
+			       <div class="form-group row">
+			           <label for="quantity" class="col-sm-3 col-form-label">商品数量</label>
+			           <div class="col-sm-9">
+			               <div class="input-group">
+			                   <input type="text" class="form-control" id="quantity" v-model="quantity">
+			                   <div class="input-group-append">
+			                       <span class="input-group-text">件</span>
+			                   </div>
+			               </div>
+			           </div>
+			       </div>
+			       <div class="form-group row">
+			           <label for="pic" class="col-sm-3 col-form-label">商品图片</label>
+			           <div class="col-sm-9">
+			               <input type="file" class="form-control-file" id="pic" @change="changeFile">
+			           </div>
+			       </div>
+			       <fieldset class="form-group">
+			           <div class="row">
+			               <legend class="col-form-label col-sm-3 pt-0">商品类型</legend>
+			               <div class="col-sm-9">
+			                   <div class="form-check">
+			                       <input class="form-check-input" type="radio" name="productType" id="type1"
+			                              value="1" v-model="typeId">
+			                       <label class="form-check-label" for="type1">
+			                           服饰
+			                       </label>
+			                   </div>
+			                   <div class="form-check">
+			                       <input class="form-check-input" type="radio" name="productType" id="type2"
+			                              value="2" v-model="typeId">
+			                       <label class="form-check-label" for="type2">
+			                           鞋包
+			                       </label>
+			                   </div>
+			                   <div class="form-check">
+			                       <input class="form-check-input" type="radio" name="productType" id="type3"
+			                              value="3" v-model="typeId">
+			                       <label class="form-check-label" for="type3">
+			                           家电
+			                       </label>
+			                   </div>
+			                   <div class="form-check">
+			                       <input class="form-check-input" type="radio" name="productType" id="type4"
+			                              value="4" v-model="typeId">
+			                       <label class="form-check-label" for="type4">
+			                           家具
+			                       </label>
+			                   </div>
+			               </div>
+			           </div>
+			       </fieldset>
+					
+			       <div class="form-group border border-danger"></div>
+					
+			       <div class="form-group row">
+			           <label for="fullName" class="col-sm-3 col-form-label">商品全称</label>
+			           <div class="col-sm-9">
+			               <input type="text" class="form-control" id="fullName" v-model="fullName">
+			           </div>
+			       </div>
+					
+			       <div class="form-group row">
+			           <label for="brandName" class="col-sm-3 col-form-label">品牌名称</label>
+			           <div class="col-sm-9">
+			               <input type="text" class="form-control" id="brandName" v-model="brandName">
+			           </div>
+			       </div>
+					
+			       <div class="form-group row">
+			           <label for="shelfLife" class="col-sm-3 col-form-label">保质期</label>
+			           <div class="col-sm-9">
+			               <input type="text" class="form-control" id="shelfLife" v-model="shelfLife">
+			           </div>
+			       </div>
+					
+			       <div class="form-group row">
+			           <label for="producer" class="col-sm-3 col-form-label">生产厂商</label>
+			           <div class="col-sm-9">
+			               <input type="text" class="form-control" id="producer" v-model="producer">
+			           </div>
+			       </div>
+					
+			       <div class="form-group row">
+			           <label for="producerAddress" class="col-sm-3 col-form-label">生产地址</label>
+			           <div class="col-sm-9">
+			               <input type="text" class="form-control" id="producerAddress" v-model="producerAddress">
+			           </div>
+			       </div>
+					
+			       <div class="form-group row">
+			           <label for="tel" class="col-sm-3 col-form-label">厂家电话</label>
+			           <div class="col-sm-9">
+			               <input type="text" class="form-control" id="tel" v-model="producerTel">
+			           </div>
+			       </div>
+					
+			       <div class="form-group row">
+			           <label for="description" class="col-sm-3 col-form-label">详细描述</label>
+			           <div class="col-sm-9">
+			               <textarea class="form-control" id="description" rows="5" v-model="description"></textarea>
+			           </div>
+			       </div>
+					
+			       <div class="form-group row justify-content-center">
+			           <div class="col-sm-5">
+			               <button type="button" class="btn btn-primary btn-block"
+			               @click="addProduct">保存</button>
+			           </div>
+			       </div>
+			   </form>
+						
+		</div>
+		
+		<script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+		        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+		        crossorigin="anonymous"></script>
+		<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.0/dist/js/bootstrap.min.js"
+		        integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
+		        crossorigin="anonymous"></script>	
+		<script th:inline="javascript">
+			const CODE_OK = 1
+
+			$(function () {
+				var mContainer = new Vue({
+					el: '#mContainer',
+					data: {
+						isInvalid: false,
+						productId:[[${productId}]],
+						detailId:[[${detailId}]],
+						productName: [[${productName}]],
+						price: [[${price}]],
+						picPath: [[${picPath}]],
+						quantity: [[${quantity}]],
+						file: null,
+						typeId: [[${typeId}]],
+						fullName: [[${fullName}]],
+						brandName: [[${brandName}]],
+						shelfLife: [[${shelfLife}]],
+						producer: [[${producer}]],
+						producerAddress: [[${producerAddress}]],
+						producerTel: [[${producerTel}]],
+						description: [[${description}]],
+						curPage: [[${curPage}]]
+					},
+					methods: {            
+						changeFile: function (event) {
+							this.file = event.target.files[0];
+						},
+						addProduct: function () {
+
+							var formData = new FormData()
+							formData.append('productId', this.productId)
+							formData.append('picPath', this.picPath)
+							formData.append('detailId', this.detailId)
+							formData.append('productName', this.productName)
+							formData.append('price', this.price)
+							formData.append('quantity', this.quantity)
+							if(this.file!=null){
+
+								formData.append('file', this.file)
+							}
+							formData.append('typeId', this.typeId)
+							formData.append('fullName', this.fullName)
+							formData.append('brandName', this.brandName)
+							formData.append('shelfLife', this.shelfLife)
+							formData.append('producer', this.producer)
+							formData.append('producerAddress', this.producerAddress)
+							formData.append('producerTel', this.producerTel)
+							formData.append('description', this.description)
+							$.ajax({
+								url: '/product/update',
+								method: 'post',
+								data: formData,
+								contentType: false,
+								processData: false,
+								success: (data) => {
+									if (data.ERROR_CODE == CODE_OK) {
+										alert("商品修改成功,点击确定返回上一页")
+										$(location).attr("href","/index")
+										history.go(-1);
+										// $(location).attr("href","/myproduct?curPage=1")
+									}else {
+										alert('商品修改失败！')
+									}
+								}
+							})
+						}
+					}
+				})
+				//
+				// $('#successModal').on('hidden.bs.modal', function (e) {
+				// 	$(location).attr('href', 'myproduct?curPage=1')
+				// })
+			})
+		</script>
+	</body>
+</html>

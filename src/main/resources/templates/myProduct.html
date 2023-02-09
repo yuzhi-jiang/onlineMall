@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.0/dist/css/bootstrap.min.css"
+          integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+    <script src="https://cdn.staticfile.org/jquery/3.2.1/jquery.js"></script>
+    <script src="./layui/layui.js"></script>
+    <title>我的商品</title>
+</head>
+<body>
+<!-- 导航条 -->
+<nav class="navbar navbar-dark bg-dark sticky-top py-1">
+    <a class="navbar-brand" href="javascript:void(0)" th:href="@{/index}">网上商城</a>
+    <div class="container d-flex flex-column flex-md-row justify-content-between navbar-nav">
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           sec:authorize="isAnonymous()" th:href="@{/login}">我的淘宝</a>
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           sec:authorize="hasRole('BUYER')" th:if="${ #authorization.authentication.principal.loginRid ==1}" th:href="@{/myorder(curPage=1,role='BUYER')}">我的淘宝</a>
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           sec:authorize="hasRole('SELLER')" th:if="${ #authorization.authentication.principal.loginRid ==2}" th:href="@{/myorder(curPage=1,role='SELLER')}">我的淘宝</a>
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           th:href="@{/productlist(curPage=1)}">商品分类</a>
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           sec:authorize="isAnonymous()" th:href="@{/login}">购物车</a>
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           sec:authorize="isAuthenticated()" th:href="@{/shoppingcar}" th:if="${ #authorization.authentication.principal.loginRid ==1}">购物车</a>
+
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           sec:authorize="isAuthenticated()&&!hasRole('SELLER')" th:href="@{/businessRegister}">成为商家</a>
+
+        <a class="nav-item nav-link"  sec:authorize="isAuthenticated()" th:if="${ #authorization.authentication.principal.loginRid ==2}" th:href="@{/myproduct(curPage=1)}">
+            我的商品</a>
+
+        <!--        <a class="nav-item nav-link" sec:authorize="hasRole('SELLER')" th:href="@{/myproduct(curPage=1)}">-->
+        <!--            我的商品</a>-->
+        <a class="nav-item nav-link" href="javascript:void(0)">网站导航</a>
+        <a class="nav-item nav-link" href="javascript:void(0)">联系客服</a>
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           sec:authorize="isAnonymous()" th:href="@{/login}">登陆/注册</a>
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           sec:authorize="isAuthenticated()" th:href="@{/logout}">
+            您好！<span sec:authentication="name">某人</span>&nbsp;&nbsp;退出</a>
+
+    </div>
+</nav>
+
+
+<script type="text/javascript">
+    function removeProduct(id) {
+        alert("id="+id);
+        layer.confirm('确认要删除吗？',function(index){
+            $.get("/product/remove", {
+                id:id
+            },function (data) {
+                    if(data.ERROR_CODE==1){
+                        layer.msg('已删除!',{icon: 5,time:1000});
+                    }else{
+                        layer.msg('删除,失败，请重试!',{icon: 5,time:1000});
+                    }
+            });
+
+        });
+    }
+</script>
+
+<div id="mContainer" class="container">
+
+    <div class="input-group mt-3">
+        <input type="text" class="form-control" placeholder="请输入关键字"
+               v-bind:class="{'is-invalid':isInvalid}" v-model="keyWord" @input="textChange">
+        <div class="input-group-append ml-2">
+            <button class="btn btn-outline-secondary" type="button"
+                    @click="searchProduct">搜索
+            </button>
+        </div>
+    </div>
+
+    <div class="border mt-5 p-3 mb-0 d-flex align-items-center">
+        <span class="h3 text-primary my-0">我的商品</span>
+        <a class="btn btn-danger ml-auto" href="/addproduct">上架新品</a>
+    </div>
+
+    <div class="container">
+        <div class="row mt-4">
+            <div class="col-4 text-center">
+                宝贝
+            </div>
+            <div class="col text-center">
+                单价
+            </div>
+            <div class="col text-center">
+                库存
+            </div>
+            <div class="col text-center">
+                商品操作
+            </div>
+        </div>
+    </div>
+
+    <div class="border border-primary mt-1"></div>
+
+    <div class="mt-4 border" v-for="product in productList">
+        <div class="py-2" style="background: rgba(0,0,0,0.05)">
+            <span class="ml-3 h5">商品ID号：{{product.id}}</span>
+        </div>
+        <div class="container">
+            <div class="row py-2">
+                <div class="col-4 d-flex">
+                    <img :src="'/img/' + product.picPath" class="mw-100 mh-100"
+                         style="width: 50px;height: 50px">
+                    <div class="ml-1">
+                        {{product.productName}}
+                    </div>
+                </div>
+                <div class="col text-center">
+                    &yen;{{product.price | formatPrice}}
+                </div>
+                <div class="col text-center">
+                    {{product.quantity}}
+                </div>
+                <div class="col text-center">
+                    <a class="text-dark" :href="'/productUpdate?productId=' + product.id+'&curPage='+curPage">
+                        修改</a>
+<!--                    <button @click="'removeProduct('+product.id+')'">删除</button>-->
+                    <button class="btn btn-outline-secondary btn-sm" type="button"
+                            @click="removeProduct(product.id)">删除</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <nav class="mt-5" v-if="totalPage > 0">
+        <ul class="pagination justify-content-center">
+            <li class="page-item" v-if="curPage > 1">
+                <a class="page-link" href="javascript:void(0)"
+                   @click="selectPage(curPage-1)">&lt;上一页</a>
+            </li>
+            <li class="page-item disabled" v-else>
+                <span class="page-link">&lt;上一页</span>
+            </li>
+
+            <template v-if="curPage <= 2">
+                <template v-for="page in (totalPage <= 5 ? totalPage : 5)">
+                    <li class="page-item" v-if="curPage != page">
+                        <a class="page-link" href="javascript:void(0)"
+                           @click="selectPage(page)">{{page}}</a>
+                    </li>
+                    <li class="page-item active" v-else>
+                        <span class="page-link">{{page}}</span>
+                    </li>
+                </template>
+                <li class="page-item disabled" v-if="totalPage > 5">
+                    <span class="page-link">...</span>
+                </li>
+            </template>
+
+            <template v-if="curPage >= 3 && curPage <= 5">
+                <template v-for="page in (totalPage <= (curPage + 3) ? totalPage : (curPage + 2))">
+                    <li class="page-item" v-if="curPage != page">
+                        <a class="page-link" href="javascript:void(0)"
+                           @click="selectPage(page)">{{page}}</a>
+                    </li>
+                    <li class="page-item active" v-else>
+                        <span class="page-link">{{page}}</span>
+                    </li>
+                </template>
+                <li class="page-item disabled" v-if="totalPage - curPage > 3">
+                    <span class="page-link">...</span>
+            </template>
+
+            <template v-if="curPage >= 6">
+                <li class="page-item">
+                    <a class="page-link" href="javascript:void(0)"
+                       @click="selectPage(1)">1</a>
+                </li>
+                <li class="page-item" v-if="totalPage > 6">
+                    <a class="page-link" href="javascript:void(0)"
+                       @click="selectPage(2)">2</a>
+                </li>
+                <li class="page-item disabled" v-if="totalPage > 7">
+                    <span class="page-link">...</span>
+                </li>
+                <template v-if="(totalPage - curPage) == 3">
+                    <template v-for="page in 6">
+                        <li class="page-item" v-if="curPage != totalPage - 6 + page">
+                            <a class="page-link" href="javascript:void(0)"
+                               @click="selectPage(totalPage - 6 + page)">{{totalPage - 6 + page}}</a>
+                        </li>
+                        <li class="page-item active" v-else>
+                            <span class="page-link">{{curPage}}</span>
+                        </li>
+                    </template>
+                </template>
+                <template v-else-if="(totalPage - curPage) < 3">
+                    <template v-for="page in 5">
+                        <li class="page-item" v-if="curPage != totalPage - 5 + page">
+                            <a class="page-link" href="javascript:void(0)"
+                               @click="selectPage(totalPage - 5 + page)">{{totalPage - 5 + page}}</a>
+                        </li>
+                        <li class="page-item active" v-else>
+                            <span class="page-link">{{curPage}}</span>
+                        </li>
+                    </template>
+                </template>
+                <template v-else>
+                    <template v-for="page in 5">
+                        <li class="page-item" v-if="curPage != curPage - 3 + page">
+                            <a class="page-link" href="javascript:void(0)"
+                               @click="selectPage(curPage - 3 + page)">{{curPage - 3 + page}}</a>
+                        </li>
+                        <li class="page-item active" v-else>
+                            <span class="page-link">{{curPage}}</span>
+                        </li>
+                    </template>
+                </template>
+                <li class="page-item disabled" v-if="totalPage - curPage > 3">
+                    <span class="page-link">...</span>
+            </template>
+            <li class="page-item" v-if="curPage < totalPage">
+                <a class="page-link" href="javascript:void(0)"
+                   @click="selectPage(curPage+1)">下一页&gt;</a>
+            </li>
+            <li class="page-item disabled" v-else>
+                <span class="page-link">下一页&gt;</span>
+            </li>
+            <div class="d-flex align-items-center">
+                <div class="text-secondary ml-3 small">共{{totalPage}}页，</div>
+                <div class="text-secondary small mx-1">到第</div>
+                <input type="text" class="form-control mx-1 form-control-sm"
+                       style="width: 3rem" :placeholder="curPage" v-model="inputPage">
+                <div class="text-secondary small mx-1">页</div>
+                <button class="btn btn-outline-secondary btn-sm" type="button"
+                        @click="toPage">确定</button>
+            </div>
+        </ul>
+    </nav>
+</div>
+
+<div class="border border-danger mt-5"></div>
+<p class="text-black-50 text-center my-5">
+    互联网药品信息服务资格证书（浙）-经营性-2018-0010|短消息类服务接入代码使用证书：号【2016】00154-A01|信息网络传播视听许可证：1109364号|出版物网络交易平台服务经营备案号：新出发浙备字第002号
+</p>
+
+<script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+        crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.0/dist/js/bootstrap.min.js"
+        integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
+        crossorigin="anonymous"></script>
+<script th:inline="javascript">
+    const CODE_OK = 1
+
+    $(function () {
+        var mContainer = new Vue({
+            el: '#mContainer',
+            data: {
+                isInvalid: false,
+                keyWord: [[${keyWord}]],
+                productList: [[${productBriefs}]],
+                curPage: [[${curPage}]],
+                rowsPerPage: [[${rowsPerPage}]],
+                totalPage: [[${totalPage}]],
+                inputPage: null
+            },
+            filters: {
+                formatPrice: function (value) {
+                    var str = value.toString();
+                    if (str.indexOf('.') > -1) {
+                        var idx = str.indexOf('.');
+                        if (idx + 2 > str.length - 1) {
+                            str += '0'
+                        } else {
+                            str = str.substring(0, idx + 3)
+                        }
+                    } else {
+                        str += '.00'
+                    }
+                    return str
+                }
+            },
+            methods: {
+                removeProduct:function(id){
+                    console.log(id)
+                    layer.confirm('确认要删除吗？',function(index){
+                        $.get("/product/remove", {
+                            id:id
+                        },function (data) {
+                            if(data.ERROR_CODE==1){
+                                layer.msg('已删除!',{icon: 5,time:1000});
+                                $(location).attr("href","/myproduct/?curPage=1")
+                            }else{
+                                layer.msg('删除,失败，请重试!',{icon: 5,time:1000});
+                            }
+                        });
+
+                    });
+                },
+                searchProduct: function (event) {
+                    if (this.keyWord == null || this.keyWord == '') {
+                        this.isInvalid = true
+                    } else {
+                        $(location).attr('href', 'productlist?keyWord=' + this.keyWord +
+                            '&curPage=1')
+                    }
+                },
+                textChange: function (event) {
+                    if (this.keyWord != '') {
+                        this.isInvalid = false
+                    }
+                },
+                selectPage: function (page) {
+                    var href = 'myproduct?curPage=' + page
+                    $(location).attr('href', href)
+                },
+                toPage: function () {
+                    var regPos = /^\d+$/;
+                    if (regPos.test(this.inputPage)) {
+                        if (parseInt(this.inputPage) > parseInt(this.totalPage)) {
+                            return
+                        }
+                        var href = 'myproduct?curPage=' + this.inputPage
+                        $(location).attr('href', href)
+                    }
+                }
+            }
+        })
+    })
+</script>
+
+</body>
+</html>

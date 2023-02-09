@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity5">
+<head>
+    <title>主页</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
+    <script src="https://cdn.staticfile.org/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdn.staticfile.org/popper.js/1.15.0/umd/popper.min.js"></script>
+    <script src="https://cdn.staticfile.org/twitter-bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.js"></script>
+<!--    <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"-->
+<!--            crossorigin="anonymous"></script>-->
+<!--    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-NU/T4JKmgovMiPaK2GP9Y+TVBQxiaiYFJB6igFtfExinKlzVruIK6XtKqxCGXwCG"-->
+<!--            crossorigin="anonymous"></script>-->
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+    <style>
+        .carousel-inner img {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+
+
+</head>
+<body>
+
+
+<!-- 导航条 -->
+<nav class="navbar navbar-dark bg-dark sticky-top py-1">
+    <a class="navbar-brand" href="javascript:void(0)" th:href="@{/index}">网上商城</a>
+    <div class="container d-flex flex-column flex-md-row justify-content-between navbar-nav">
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           sec:authorize="isAnonymous()" th:href="@{/login}">我的淘宝</a>
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           sec:authorize="hasRole('BUYER')" th:if="${ #authorization.authentication.principal.loginRid =='ROLE_BUYER'}" th:href="@{/myorder(curPage=1,role='BUYER')}">我的淘宝</a>
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           sec:authorize="hasRole('SELLER')" th:if="${ #authorization.authentication.principal.loginRid =='ROLE_SELLER'}" th:href="@{/myorder(curPage=1,role='SELLER')}">我的淘宝</a>
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           th:href="@{/productlist(curPage=1)}">商品分类</a>
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           sec:authorize="isAnonymous()" th:href="@{/login}">购物车</a>
+        <a class="nav-item nav-link" href="javascript:void(0)"
+                 sec:authorize="hasRole('BUYER')" th:href="@{/shoppingcar}" >购物车</a>
+        <!--           sec:authorize="isAuthenticated()" th:href="@{/shoppingcar}" th:if="${#authorization.expression('principal.loginRid ==='ROLE_BUYER'')}">购物车</a>-->
+
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           sec:authorize="isAuthenticated()&&!hasRole('SELLER')" th:href="@{/businessRegister}">成为商家</a>
+
+        <a class="nav-item nav-link"  sec:authorize="isAuthenticated()" th:if="${ #authorization.authentication.principal.loginRid =='ROLE_SELLER'}" th:href="@{/myproduct(curPage=1)}">
+            我的商品</a>
+
+<!--        <a class="nav-item nav-link" sec:authorize="hasRole('SELLER')" th:href="@{/myproduct(curPage=1)}">-->
+<!--            我的商品</a>-->
+        <a class="nav-item nav-link" href="javascript:void(0)">网站导航</a>
+        <a class="nav-item nav-link" href="javascript:void(0)">联系客服</a>
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           sec:authorize="isAnonymous()" th:href="@{/login}">登陆/注册</a>
+        <a class="nav-item nav-link" href="javascript:void(0)"
+           sec:authorize="isAuthenticated()" th:href="@{/logout}">
+            您好！<span sec:authentication="name">某人</span>&nbsp;&nbsp;退出</a>
+    </div>
+</nav>
+
+
+
+
+<!--</div>-->
+<div id="header"></div>
+<script type="text/javascript">
+    $(document).ready(function(){
+        // $("#header").load("publicHtml/daohang.html")
+        $("#foot").load("publicHtml/foot.html")
+
+    });
+</script>
+
+
+<div id="container" class="container">
+
+
+    <!--搜索框 -->
+    <div class="input-group mt-3">
+        <input type="text" class="form-control" placeholder="请输入关键字"
+               v-bind:class="{'is-invalid':isInvalid}" v-model="keyWord" @input="textChange">
+        <div class="input-group-append ml-2">
+            <button class="btn btn-outline-secondary" type="button"
+                    @click="searchProduct">搜索
+            </button>
+        </div>
+    </div>
+    <!--    <div class="input-group mb-5">-->
+<!--        <input type="text" class="form-control" placeholder="输入关键字" aria-label="serch" aria-describedby="button-addon2">-->
+<!--        <div class="input-group-append">-->
+<!--            <button class="btn btn-outline-secondary" type="button" id="button-addon2">搜索</button>-->
+<!--        </div>-->
+<!--    </div>-->
+
+    <!-- 轮播图 -->
+    <div id='demo' class="carousel slide container" data-ride="carousel" style="max-width: 600px;">
+
+        <!-- 指示符 -->
+        <ul class="carousel-indicators">
+            <li data-target="#demo" data-slide-to="0" class="active"></li>
+            <li data-target="#demo" data-slide-to="1"></li>
+            <li data-target="#demo" data-slide-to="2"></li>
+        </ul>
+
+        <!-- 轮播图片 -->
+        <div class="carousel-inner">
+<!--            <div class="carousel-item active">-->
+<!--                <img src="img/3.jpg">-->
+<!--            </div>-->
+            <div th:each="ad,loopStatus: ${advertiseList}" th:class="${loopStatus.index}==0?'carousel-item active':'carousel-item'">
+                <img th:src="@{'/img/'+${ad.picPath}}">
+            </div>
+
+        </div>
+
+        <!-- 左右切换按钮 -->
+        <a class="carousel-control-prev" href="#demo" data-slide="prev">
+            <span class="carousel-control-prev-icon"></span>
+        </a>
+        <a class="carousel-control-next" href="#demo" data-slide="next">
+            <span class="carousel-control-next-icon"></span>
+        </a>
+
+    </div>
+
+
+
+
+
+
+    <div id="shopping">
+
+        <div th:each="productType : ${hotSellProducts}">
+            <div class="p3 d-flex algin-items-center border mt-3 ">
+                <div class="bg-danger" style="width: 16px; height: 32px;"></div>
+                <div class="h4 ml-3" th:text="${productType.type}"></div>
+                <a class="h4 ml-auto" th:href="@{/productlist(typeId=${productType.id})}">More</a>
+            </div>
+
+            <!--具体商品 -->
+            <div id="pucutor">
+
+                <!-- 第一行 -->
+                <div class="d-flex justify-content-between mt-3" >
+
+                    <!-- 第一列 -->
+                    <div class="card" style="width: 16rem;" th:each="product : ${productType.products}">
+<!--                         v-for="(product,index) in productType.products" v-if="index<4":key="index"-->
+
+                        <img src="img/12-12.jpg" class="card-img-top" alt="..." th:src="@{'/img/' + ${product.picPath}}">
+                        <div class="card-body">
+                            <h5 class="card-title text-danger" th:text="'&yen; '+${product.price}">&yen;商品价格</h5>
+
+<!--                            <a href="javascript:void(0)" class="stretched-link text-decoration-none text-dark"-->
+<!--                               th:text="${product.productName}" th:href="@{/productdetail(id=${product.id})}">商品名称</a>-->
+                            <a th:href="@{/productdetail(id=${product.id})}" class="stretched-link" th:text="${product.name}">商品名称</a>
+                            <p class="card-text" th:text="'库存:'+ ${product.quantity}">库存</p>
+                        </div>
+                    </div>
+
+                </div>
+
+
+            </div>
+
+
+
+        </div>
+
+
+    </div>
+
+</div>
+
+
+
+
+
+<div id="foot"></div>
+
+
+
+
+<script th:inline="javascript">
+    var loginApp = new Vue({
+        el: "#container",
+        data: {
+            keyWord:"",
+            isInvalid:false,
+            username: "1111",
+            shopp:[[${hotSellProducts}]],
+            advertiseList:[[${advertiseList}]]
+        },
+        methods:{
+            searchProduct: function (event) {
+                if (this.keyWord == null || this.keyWord == '') {
+                    this.isInvalid = true
+                } else {
+                    $(location).attr('href', 'productlist?keyWord=' + this.keyWord +
+                        '&curPage=1')
+                }
+            },textChange: function (event) {
+                if (this.keyWord != '') {
+                    this.isInvalid = false
+                }
+            },
+        }
+    })
+</script>
+</body>
+
+
+
+
+
+
+
+
+</html>
